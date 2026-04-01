@@ -1,7 +1,8 @@
 import uuid6
-from .extensions import db
 from datetime import datetime, UTC
 from sqlalchemy.dialects.postgresql.base import UUID
+
+from .extensions import db
 
 
 class BaseModel(db.Model):
@@ -47,3 +48,21 @@ class Product(BaseModel):
 
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"), nullable=False)
     user = db.relationship("User", back_populates="products")
+
+
+class TokenBlocklist(db.Model):
+    __tablename__ = "token_blocklist"
+
+    id = db.Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid6.uuid7,
+    )
+
+    jti = db.Column(db.String, nullable=False, index=True)
+
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
