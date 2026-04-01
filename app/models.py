@@ -26,16 +26,23 @@ class BaseModel(db.Model):
         nullable=False,
     )
 
+    is_active = db.Column(db.Boolean, default=True)
+
 
 class User(BaseModel):
     __tablename__ = 'users'
 
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+
+    products = db.relationship("Product", back_populates="user", lazy=True)
 
 
 class Product(BaseModel):
     __tablename__ = 'products'
 
     name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
     price = db.Column(db.Numeric(10, 2), nullable=False)
+
+    user = db.relationship("User", back_populates="products")
