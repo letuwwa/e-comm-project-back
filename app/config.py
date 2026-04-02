@@ -4,6 +4,9 @@ from datetime import timedelta
 
 
 load_dotenv()
+for variable in ("DATABASE_URL", "JWT_SECRET_KEY"):
+    if not os.getenv(variable):
+        raise RuntimeError(f"Missing required env variable: {variable}")
 
 
 class Config:
