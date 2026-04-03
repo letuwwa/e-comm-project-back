@@ -1,9 +1,3 @@
-from flask import Blueprint, request
-from datetime import datetime, timezone
-from werkzeug.security import generate_password_hash, check_password_hash
-
-from app.extensions import db
-from app.models import User, TokenBlocklist
 from flask_jwt_extended import (
     get_jwt,
     jwt_required,
@@ -11,6 +5,12 @@ from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
 )
+from flask import Blueprint, request
+from datetime import datetime, timezone
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from app.extensions import db
+from app.models import User, TokenBlocklist
 
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
