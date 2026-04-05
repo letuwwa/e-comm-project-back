@@ -2,6 +2,7 @@ import uuid
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+from app.api import get_json_data, get_user_product, serialize_product
 from app.extensions import db
 from app.models import Product
 
@@ -12,7 +13,7 @@ bp = Blueprint("product", __name__)
 @bp.route("/products", methods=["POST"])
 @jwt_required()
 def create_product():
-    data = request.get_json()
+    data = get_json_data(request)
     user_id = get_jwt_identity()
 
     product = Product(
@@ -34,14 +35,7 @@ def get_my_products():
     user_id = get_jwt_identity()
     products = Product.query.filter_by(user_id=user_id).all()
 
-    return [
-        {
-            "id": p.id,
-            "name": p.name,
-            "price": p.price,
-        }
-        for p in products
-    ]
+    return [serialize_product(product) for product in products]
 
 
 @bp.route("/products/<uuid:product_id>", methods=["GET"])
@@ -49,32 +43,21 @@ def get_my_products():
 def get_product(product_id: uuid.UUID):
     user_id = get_jwt_identity()
 
-    product = Product.query.filter_by(
-        id=str(product_id),
-        user_id=user_id,
-    ).first()
+    product = get_user_product(product_id=product_id, user_id=user_id)
 
     if not product:
         return {"error": "Not found"}, 404
 
-    return {
-        "id": product.id,
-        "name": product.name,
-        "price": product.price,
-        "description": product.description,
-    }
+    return serialize_product(product, include_description=True)
 
 
 @bp.route("/products/<uuid:product_id>", methods=["PUT"])
 @jwt_required()
 def update_product(product_id: uuid.UUID):
     user_id = get_jwt_identity()
-    data = request.get_json()
+    data = get_json_data(request)
 
-    product = Product.query.filter_by(
-        id=str(product_id),
-        user_id=user_id,
-    ).first()
+    product = get_user_product(product_id=product_id, user_id=user_id)
 
     if not product:
         return {"error": "Not found"}, 404
@@ -93,10 +76,7 @@ def update_product(product_id: uuid.UUID):
 def delete_product(product_id: uuid.UUID):
     user_id = get_jwt_identity()
 
-    product = Product.query.filter_by(
-        id=str(product_id),
-        user_id=user_id,
-    ).first()
+    product = get_user_product(product_id=product_id, user_id=user_id)
 
     if not product:
         return {"error": "Not found"}, 404

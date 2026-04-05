@@ -1,4 +1,5 @@
 from flask import Blueprint
+from app.api import serialize_product
 from app.models import Product
 
 
@@ -9,11 +10,4 @@ index_bp = Blueprint("main", __name__)
 def index():
     products = Product.query.all()
 
-    return [
-        {
-            "id": p.id,
-            "name": p.name,
-            "price": p.price,
-        }
-        for p in products
-    ]
+    return [serialize_product(product) for product in products]

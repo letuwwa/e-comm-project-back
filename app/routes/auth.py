@@ -6,11 +6,11 @@ from flask_jwt_extended import (
     create_refresh_token,
 )
 from flask import Blueprint, request
-from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from app.models import User
 from app.extensions import db
-from app.models import User, TokenBlocklist
+from app.api import get_json_data, revoke_token
 
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -18,7 +18,7 @@ bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @bp.route("/register", methods=["POST"])
 def register():
-    data = request.get_json()
+    data = get_json_data(request)
 
     if not data or "email" not in data or "password" not in data:
         return {"msg": "invalid input"}, 400
@@ -39,7 +39,7 @@ def register():
 
 @bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
+    data = get_json_data(request)
 
     if not data or "email" not in data or "password" not in data:
         return {"msg": "invalid input"}, 400
@@ -66,13 +66,7 @@ def refresh():
 @bp.route("/logout", methods=["POST"])
 @jwt_required()
 def logout():
-    token = TokenBlocklist(
-        jti=get_jwt()["jti"],
-        created_at=datetime.now(timezone.utc),
-    )
-
-    db.session.add(token)
-    db.session.commit()
+    revoke_token(get_jwt()["jti"])
 
     return {"msg": "access token revoked"}, 200
 
@@ -80,12 +74,6 @@ def logout():
 @bp.route("/logout/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def logout_refresh():
-    token = TokenBlocklist(
-        jti=get_jwt()["jti"],
-        created_at=datetime.now(timezone.utc),
-    )
-
-    db.session.add(token)
-    db.session.commit()
+    revoke_token(get_jwt()["jti"])
 
     return {"msg": "refresh token revoked"}, 200
